@@ -90,6 +90,82 @@ export interface FaucetResponse {
 }
 
 /**
+ * Bridge-in request: notify Zero that tokens were locked on an external chain.
+ */
+export interface BridgeInRequest {
+  /** Source chain identifier (e.g. "ethereum", "solana") */
+  source_chain: string;
+  /** Token symbol or contract address on the source chain */
+  token: string;
+  /** Lock transaction hash on the source chain */
+  tx_hash: string;
+  /** Recipient address on the Zero Network (hex) */
+  zero_recipient: string;
+}
+
+/**
+ * Bridge-in response returned after submitting a bridge-in request.
+ */
+export interface BridgeInResponse {
+  /** Unique bridge operation identifier */
+  bridge_id: string;
+  /** Current status of the bridge operation */
+  status: string;
+  /** Amount of Z minted / to be minted */
+  z_amount: number;
+}
+
+/**
+ * Bridge-out request: withdraw Z back to an external chain.
+ */
+export interface BridgeOutRequest {
+  /** Destination chain identifier (e.g. "ethereum", "solana") */
+  dest_chain: string;
+  /** Token symbol or contract address on the destination chain */
+  token: string;
+  /** Recipient address on the destination chain */
+  dest_address: string;
+  /** Amount of Z to bridge out */
+  z_amount: number;
+  /** Sender address on the Zero Network (hex) */
+  from: string;
+  /** Ed25519 signature authorising the withdrawal (hex) */
+  signature: string;
+}
+
+/**
+ * Bridge-out response returned after submitting a bridge-out request.
+ */
+export interface BridgeOutResponse {
+  /** Unique bridge operation identifier */
+  bridge_id: string;
+  /** Current status of the bridge operation */
+  status: string;
+}
+
+/**
+ * Bridge status response with full details of a bridge operation.
+ */
+export interface BridgeStatusResponse {
+  /** Unique bridge operation identifier */
+  bridge_id: string;
+  /** Direction of the bridge ("in" or "out") */
+  direction: string;
+  /** Current status of the bridge operation */
+  status: string;
+  /** Source chain identifier */
+  source_chain: string;
+  /** Token symbol or contract address */
+  token: string;
+  /** Amount of Z involved */
+  z_amount: number;
+  /** Number of attestations received so far */
+  attestations: number;
+  /** Number of attestations required to finalise */
+  required: number;
+}
+
+/**
  * Low-level HTTP client for the Zero Network JSON API.
  *
  * Uses the standard `fetch` API, compatible with Node.js 18+ and browsers.
@@ -221,5 +297,57 @@ export class ZeroClient {
       throw new Error(`Faucet request failed: ${res.status} ${res.statusText} — ${text}`);
     }
     return res.json() as Promise<FaucetResponse>;
+  }
+
+  /**
+   * Initiate a bridge-in: notify Zero that tokens were locked on an external chain.
+   *
+   * @param req - Bridge-in request with source chain, token, tx hash, and recipient
+   * @returns Bridge-in response with bridge ID, status, and Z amount
+   */
+  async bridgeIn(req: BridgeInRequest): Promise<BridgeInResponse> {
+    const res = await fetch(`${this.rpc}/api/bridge/in`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(req),
+    });
+    if (!res.ok) {
+      const text = await res.text();
+      throw new Error(`Bridge-in request failed: ${res.status} ${res.statusText} — ${text}`);
+    }
+    return res.json() as Promise<BridgeInResponse>;
+  }
+
+  /**
+   * Initiate a bridge-out: withdraw Z back to an external chain.
+   *
+   * @param req - Bridge-out request with destination chain, token, address, amount, and signature
+   * @returns Bridge-out response with bridge ID and status
+   */
+  async bridgeOut(req: BridgeOutRequest): Promise<BridgeOutResponse> {
+    const res = await fetch(`${this.rpc}/api/bridge/out`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(req),
+    });
+    if (!res.ok) {
+      const text = await res.text();
+      throw new Error(`Bridge-out request failed: ${res.status} ${res.statusText} — ${text}`);
+    }
+    return res.json() as Promise<BridgeOutResponse>;
+  }
+
+  /**
+   * Get the status of a bridge operation.
+   *
+   * @param bridgeId - Unique bridge operation identifier
+   * @returns Bridge status with direction, attestations, and current state
+   */
+  async bridgeStatus(bridgeId: string): Promise<BridgeStatusResponse> {
+    const res = await fetch(`${this.rpc}/api/bridge/status/${bridgeId}`);
+    if (!res.ok) {
+      throw new Error(`Bridge status request failed: ${res.status} ${res.statusText}`);
+    }
+    return res.json() as Promise<BridgeStatusResponse>;
   }
 }

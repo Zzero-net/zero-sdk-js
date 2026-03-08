@@ -24,6 +24,11 @@ export type {
   TransactionRecord,
   SendResponse,
   FaucetResponse,
+  BridgeInRequest,
+  BridgeInResponse,
+  BridgeOutRequest,
+  BridgeOutResponse,
+  BridgeStatusResponse,
 } from "./client.js";
 
 // Network constants
