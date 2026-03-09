@@ -2,7 +2,6 @@ import nacl from "tweetnacl";
 import {
   TX_SIZE,
   PUBKEY_SIZE,
-  SIG_SIZE,
   AMOUNT_SIZE,
   NONCE_SIZE,
   ED25519_SIG_SIZE,
@@ -60,7 +59,7 @@ export function fromHex(hex: string): Uint8Array {
 /**
  * Build an unsigned transfer transaction buffer.
  *
- * Layout (72 bytes unsigned, 100 bytes signed):
+ * Layout (72 bytes unsigned, 136 bytes signed):
  * - from[32]: sender public key
  * - to[32]: recipient public key
  * - amount[4]: uint32 LE amount in units
@@ -149,16 +148,17 @@ export function signTransfer(
 
 /**
  * Parse a signed transaction buffer into its components.
- * Accepts 136-byte (full signature) or 100-byte (truncated, legacy) format.
+ * Accepts 136-byte (full signature) or 100-byte (legacy truncated) format.
  *
  * @param txBytes - Transaction buffer
  * @returns Parsed transaction fields
  * @throws Error if buffer size is invalid
  */
 export function parseTransfer(txBytes: Uint8Array): ParsedTransfer {
-  const FULL_TX_SIZE = PUBKEY_SIZE + PUBKEY_SIZE + AMOUNT_SIZE + NONCE_SIZE + ED25519_SIG_SIZE; // 136
-  if (txBytes.length !== FULL_TX_SIZE && txBytes.length !== TX_SIZE) {
-    throw new Error(`Transaction must be ${FULL_TX_SIZE} or ${TX_SIZE} bytes, got ${txBytes.length}`);
+  const LEGACY_TX_SIZE = 100; // old format: payload(72) + truncated_sig(28)
+  const LEGACY_SIG_SIZE = 28;
+  if (txBytes.length !== TX_SIZE && txBytes.length !== LEGACY_TX_SIZE) {
+    throw new Error(`Transaction must be ${TX_SIZE} or ${LEGACY_TX_SIZE} bytes, got ${txBytes.length}`);
   }
 
   const from = txBytes.slice(0, PUBKEY_SIZE);
@@ -169,7 +169,7 @@ export function parseTransfer(txBytes: Uint8Array): ParsedTransfer {
   const nonce = view.getUint32(PUBKEY_SIZE + PUBKEY_SIZE + AMOUNT_SIZE, true);
 
   const sigOffset = PUBKEY_SIZE + PUBKEY_SIZE + AMOUNT_SIZE + NONCE_SIZE;
-  const sigSize = txBytes.length === FULL_TX_SIZE ? ED25519_SIG_SIZE : SIG_SIZE;
+  const sigSize = txBytes.length === TX_SIZE ? ED25519_SIG_SIZE : LEGACY_SIG_SIZE;
   const signature = txBytes.slice(sigOffset, sigOffset + sigSize);
 
   return {

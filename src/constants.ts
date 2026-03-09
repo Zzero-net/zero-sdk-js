@@ -2,7 +2,7 @@
 export const DEFAULT_RPC = "https://rpc.zzero.net";
 
 /** Default faucet endpoint (testnet) */
-export const DEFAULT_FAUCET = "http://157.180.56.48:8093";
+export const DEFAULT_FAUCET = "https://rpc.zzero.net";
 
 /** 1 Z = 100 internal units */
 export const UNITS_PER_Z = 100;
@@ -34,14 +34,14 @@ export const ACCOUNT_CREATION_UNITS = 500;
 /** Account creation cost in Z */
 export const ACCOUNT_CREATION_Z = 5.0;
 
-/** Total transaction size in bytes */
-export const TX_SIZE = 100;
+/** Total transaction size in bytes (from[32] + to[32] + amount[4] + nonce[4] + signature[64]) */
+export const TX_SIZE = 136;
 
 /** Public key size in bytes (Ed25519) */
 export const PUBKEY_SIZE = 32;
 
-/** Signature size in the transaction (truncated) */
-export const SIG_SIZE = 28;
+/** Signature size in the transaction (full Ed25519) */
+export const SIG_SIZE = 64;
 
 /** Amount field size in bytes (uint32 little-endian) */
 export const AMOUNT_SIZE = 4;
