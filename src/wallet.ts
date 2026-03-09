@@ -164,9 +164,9 @@ export class Wallet {
       throw new Error("Amount too small — minimum is 0.01 Z (1 unit)");
     }
 
-    // Fetch current nonce
+    // Fetch current nonce and increment (validator expects next nonce)
     const acct = await this.client.account(this.address);
-    const nonce = acct.nonce;
+    const nonce = acct.nonce + 1;
 
     // Build and sign the transaction
     const toBytes = typeof to === "string" ? to : toHex(to);

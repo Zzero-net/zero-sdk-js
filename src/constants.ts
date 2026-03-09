@@ -10,11 +10,17 @@ export const UNITS_PER_Z = 100;
 /** 1 Z = $0.01 USD */
 export const USD_PER_Z = 0.01;
 
-/** Transaction fee: 0.01 Z = 1 unit */
+/** Transfer fee: 0.01 Z = 1 unit */
 export const FEE_UNITS = 1;
 
-/** Transaction fee in Z */
+/** Transfer fee in Z */
 export const FEE_Z = 0.01;
+
+/** Bridge-out fee: 0.5 Z = 50 units (covers EVM gas for vault release) */
+export const BRIDGE_OUT_FEE_UNITS = 50;
+
+/** Bridge-out fee in Z */
+export const BRIDGE_OUT_FEE_Z = 0.5;
 
 /** Maximum transfer amount: 25 Z = 2500 units */
 export const MAX_TRANSFER_UNITS = 2500;

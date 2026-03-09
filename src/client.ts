@@ -290,7 +290,7 @@ export class ZeroClient {
     const res = await fetch(`${this.faucetUrl}/faucet`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ address: hex }),
+      body: JSON.stringify({ recipient: hex }),
     });
     if (!res.ok) {
       const text = await res.text();

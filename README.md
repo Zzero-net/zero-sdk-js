@@ -101,7 +101,8 @@ import { UNITS_PER_Z, FEE_Z, MAX_TRANSFER_Z } from "@zero-network/sdk";
 |-----------|-------|
 | 1 Z | $0.01 USD |
 | 1 Z | 100 internal units |
-| Transaction fee | 0.01 Z (1 unit) |
+| Transfer fee | 0.01 Z (1 unit) |
+| Bridge-out fee | 0.5 Z (50 units) |
 | Max transfer | 25 Z (2500 units) |
 | Account creation | 1.00 Z on first receive |
 | Signature | Ed25519 (tweetnacl) |
