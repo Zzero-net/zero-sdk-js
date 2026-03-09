@@ -58,11 +58,11 @@ describe("buildTransfer", () => {
 });
 
 describe("signTransfer", () => {
-  it("produces a 100-byte signed transaction", () => {
+  it("produces a 136-byte signed transaction with full signature", () => {
     const kp = nacl.sign.keyPair();
     const unsigned = buildTransfer(kp.publicKey, new Uint8Array(PUBKEY_SIZE).fill(2), 100, 0);
     const signed = signTransfer(unsigned, kp.secretKey);
-    expect(signed.length).toBe(TX_SIZE);
+    expect(signed.length).toBe(136); // 72 payload + 64 full Ed25519 signature
   });
 
   it("preserves payload in the first 72 bytes", () => {
@@ -74,7 +74,7 @@ describe("signTransfer", () => {
 });
 
 describe("parseTransfer", () => {
-  it("round-trips build → sign → parse", () => {
+  it("round-trips build → sign → parse with full signature", () => {
     const kp = nacl.sign.keyPair();
     const to = new Uint8Array(PUBKEY_SIZE).fill(0xaa);
     const unsigned = buildTransfer(kp.publicKey, to, 1234, 99);
@@ -85,10 +85,10 @@ describe("parseTransfer", () => {
     expect(parsed.toHex).toBe(toHex(to));
     expect(parsed.amount).toBe(1234);
     expect(parsed.nonce).toBe(99);
-    expect(parsed.signature.length).toBe(28);
+    expect(parsed.signature.length).toBe(64); // full Ed25519 signature
   });
 
   it("rejects wrong buffer size", () => {
-    expect(() => parseTransfer(new Uint8Array(50))).toThrow("100 bytes");
+    expect(() => parseTransfer(new Uint8Array(50))).toThrow("136 or 100 bytes");
   });
 });

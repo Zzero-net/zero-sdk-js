@@ -21,7 +21,7 @@ export interface ParsedTransfer {
   amount: number;
   /** Sender's nonce */
   nonce: number;
-  /** Truncated signature (28 bytes) */
+  /** Ed25519 signature (64 bytes full, or 28 bytes legacy truncated) */
   signature: Uint8Array;
   /** Sender public key as hex string */
   fromHex: string;
@@ -110,14 +110,14 @@ export function buildTransfer(
 }
 
 /**
- * Sign an unsigned transfer and return the complete 100-byte transaction.
+ * Sign an unsigned transfer and return the complete 136-byte transaction.
  *
- * The signature is computed over the 72-byte unsigned payload using Ed25519,
- * then truncated to 28 bytes and appended.
+ * The signature is computed over the 72-byte unsigned payload using Ed25519.
+ * The full 64-byte signature is appended (required by the validator).
  *
  * @param unsignedTx - 72-byte unsigned transaction from {@link buildTransfer}
  * @param secretKey - Ed25519 secret key (64 bytes, as returned by tweetnacl keypair)
- * @returns 100-byte signed transaction ready for submission
+ * @returns 136-byte signed transaction ready for submission
  * @throws Error if inputs have wrong sizes
  */
 export function signTransfer(
@@ -139,24 +139,26 @@ export function signTransfer(
   // Sign the 72-byte payload
   const fullSig = nacl.sign.detached(unsignedTx, secretKey);
 
-  // Build complete 100-byte transaction: payload(72) + truncated_sig(28) = 100
-  const tx = new Uint8Array(TX_SIZE);
+  // Build complete 136-byte transaction: payload(72) + full_sig(64) = 136
+  const tx = new Uint8Array(expectedUnsignedSize + ED25519_SIG_SIZE);
   tx.set(unsignedTx, 0);
-  tx.set(fullSig.subarray(0, SIG_SIZE), expectedUnsignedSize);
+  tx.set(fullSig, expectedUnsignedSize);
 
   return tx;
 }
 
 /**
- * Parse a 100-byte signed transaction buffer into its components.
+ * Parse a signed transaction buffer into its components.
+ * Accepts 136-byte (full signature) or 100-byte (truncated, legacy) format.
  *
- * @param txBytes - 100-byte transaction buffer
+ * @param txBytes - Transaction buffer
  * @returns Parsed transaction fields
- * @throws Error if buffer is not 100 bytes
+ * @throws Error if buffer size is invalid
  */
 export function parseTransfer(txBytes: Uint8Array): ParsedTransfer {
-  if (txBytes.length !== TX_SIZE) {
-    throw new Error(`Transaction must be ${TX_SIZE} bytes, got ${txBytes.length}`);
+  const FULL_TX_SIZE = PUBKEY_SIZE + PUBKEY_SIZE + AMOUNT_SIZE + NONCE_SIZE + ED25519_SIG_SIZE; // 136
+  if (txBytes.length !== FULL_TX_SIZE && txBytes.length !== TX_SIZE) {
+    throw new Error(`Transaction must be ${FULL_TX_SIZE} or ${TX_SIZE} bytes, got ${txBytes.length}`);
   }
 
   const from = txBytes.slice(0, PUBKEY_SIZE);
@@ -167,7 +169,8 @@ export function parseTransfer(txBytes: Uint8Array): ParsedTransfer {
   const nonce = view.getUint32(PUBKEY_SIZE + PUBKEY_SIZE + AMOUNT_SIZE, true);
 
   const sigOffset = PUBKEY_SIZE + PUBKEY_SIZE + AMOUNT_SIZE + NONCE_SIZE;
-  const signature = txBytes.slice(sigOffset, sigOffset + SIG_SIZE);
+  const sigSize = txBytes.length === FULL_TX_SIZE ? ED25519_SIG_SIZE : SIG_SIZE;
+  const signature = txBytes.slice(sigOffset, sigOffset + sigSize);
 
   return {
     from,

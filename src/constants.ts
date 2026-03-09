@@ -28,11 +28,11 @@ export const MAX_TRANSFER_UNITS = 2500;
 /** Maximum transfer amount in Z */
 export const MAX_TRANSFER_Z = 25;
 
-/** Account creation cost: 1.00 Z = 100 units (deducted on first receive) */
-export const ACCOUNT_CREATION_UNITS = 100;
+/** Account creation cost: 5.00 Z = 500 units (deducted on first receive) */
+export const ACCOUNT_CREATION_UNITS = 500;
 
 /** Account creation cost in Z */
-export const ACCOUNT_CREATION_Z = 1.0;
+export const ACCOUNT_CREATION_Z = 5.0;
 
 /** Total transaction size in bytes */
 export const TX_SIZE = 100;

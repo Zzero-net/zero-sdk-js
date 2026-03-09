@@ -263,14 +263,31 @@ export class ZeroClient {
   /**
    * Submit a signed transaction to the network.
    *
-   * @param txBytes - Complete 100-byte signed transaction
+   * @param txBytes - Complete signed transaction (136-byte with full Ed25519 signature)
    * @returns Submission response with acceptance status and hash
    */
   async send(txBytes: Uint8Array): Promise<SendResponse> {
+    // Parse the fields from the transaction bytes and send as JSON
+    // Format: from(32) + to(32) + amount(4) + nonce(4) + signature(64) = 136 bytes
+    const from = txBytes.slice(0, 32);
+    const to = txBytes.slice(32, 64);
+    const view = new DataView(txBytes.buffer, txBytes.byteOffset, txBytes.byteLength);
+    const amount = view.getUint32(64, true);
+    const nonce = view.getUint32(68, true);
+    const signature = txBytes.slice(72, 136);
+
+    const body = {
+      from: toHex(from),
+      to: toHex(to),
+      amount,
+      nonce,
+      signature: toHex(signature),
+    };
+
     const res = await fetch(`${this.rpc}/api/send`, {
       method: "POST",
-      headers: { "Content-Type": "application/octet-stream" },
-      body: txBytes,
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
     });
     if (!res.ok) {
       const text = await res.text();
