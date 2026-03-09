@@ -58,7 +58,7 @@ const history = await client.history("pubkey_hex", 10);
 import { buildTransfer, signTransfer, parseTransfer } from "@zero-network/sdk";
 
 const unsigned = buildTransfer(fromPubkey, toPubkey, amountUnits, nonce);
-const signed = signTransfer(unsigned, secretKey); // 100-byte tx
+const signed = signTransfer(unsigned, secretKey); // 136-byte tx
 const parsed = parseTransfer(signed);
 ```
 
@@ -106,7 +106,7 @@ import { UNITS_PER_Z, FEE_Z, MAX_TRANSFER_Z } from "@zero-network/sdk";
 | Max transfer | 25 Z (2500 units) |
 | Account creation | 1.00 Z on first receive |
 | Signature | Ed25519 (tweetnacl) |
-| Transaction size | 100 bytes |
+| Transaction size | 136 bytes |
 
 ## License
 
